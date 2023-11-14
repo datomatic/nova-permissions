@@ -2,6 +2,7 @@
 
 namespace Eminiarts\NovaPermissions\Nova;
 
+use App\Enums\OrderType;
 use Eminiarts\NovaPermissions\Checkboxes;
 use Eminiarts\NovaPermissions\Role as RoleModel;
 use Illuminate\Http\Request;
@@ -11,6 +12,7 @@ use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\MorphToMany;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
 use Laravel\Nova\Resource;
 use Spatie\Permission\Models\Permission as SpatiePermission;
@@ -45,9 +47,16 @@ class Role extends Resource
      */
     public static $title = 'name';
 
+    protected $withCount = 'users';
+
     public static function singularLabel()
     {
         return __('Role');
+    }
+
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        return $query->withCount('users');
     }
 
     /**
@@ -83,7 +92,7 @@ class Role extends Resource
                 })
             ,
             Text::make(__('Users'), function () {
-                return count($this->users);
+                return $this->resource?->users_count;
             })->exceptOnForms(),
             Heading::make('Permissions'),
             Checkboxes::make(__('Permissions'), 'prepared_permissions')->withGroups()->options(SpatiePermission::all()->map(function ($permission, $key) {
